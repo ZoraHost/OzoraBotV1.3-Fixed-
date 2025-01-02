@@ -160,6 +160,43 @@ const time2 = moment().tz('Asia/Jakarta').format('HH:mm:ss')
         }
 //================== [ FUNCTION ] ==================//
 
+const downloadMp4 = async (Link) => {
+try{
+let yutub = await y2matemp4(Link)
+//if (yutub.size < 104857600) {
+const SiXcz = `*${yutub.title}*\n\nID: ${yutub.vid}`;
+await Ozora.sendMessage(m.chat, { video: { url: yutub.video["360"].url }, caption: SiXc,gifPlayback: false},{quoted: FakeEVS})
+/*} else {
+await m.reply(`File video ( ${bytesToSize(yutub.size)} ), telah melebihi batas maksimum!`)
+}*/
+} catch(err) {
+m.reply(`${err}`)
+}}
+
+const downloadMp3 = async (Link) => {
+try{
+let yutub = await y2matemp3(Link)
+//if (yutub.size < 62914560) {
+await Ozora.sendMessage(m.chat, {audio: { url: yutub.audio["128"].url }, mimetype: 'audio/mpeg', contextInfo:{
+forwardingScore: 9999999,
+isForwarded: true, 
+externalAdReply: {
+title: "YouTube - Play",
+body: yutub.title,
+mediaType: 1,
+previewType: 0,
+renderLargerThumbnail: true,
+thumbnailUrl: yutub.thumbnail,
+sourceUrl: Link
+}
+}},{ quoted: FakeEVS })
+/*} else {
+await m.reply(`File audio ( ${bytesToSize(yutub.size)} ), telah melebihi batas maksimum!`)
+}*/
+} catch (err){
+console.log(err)
+}}
+
 const Styles = (text, style = 1) => {
   var xStr = 'abcdefghijklmnopqrstuvwxyz1234567890'.split('');
   var yStr = {
@@ -331,6 +368,28 @@ delete Ozora.autoshalat[m.chat];
     console.log(chalk.cyan('───────────────────────────────────⳹\n'));
 }
 //================== [ FAKE REPLY ] ==================//
+const FakeEVS = {
+key: {
+participant: "0@s.whatsapp.net",
+...(m.chat ? {
+remoteJid: `status@broadcast`
+} : {})
+},
+'message': {
+  "eventMessage": {
+    "isCanceled": false,
+    "name": `Ozora Network 🌐`,
+    "description": "global",
+    "location": {
+      "degreesLatitude": 0,
+      "degreesLongitude": 0,
+      "name": " html "
+    },
+    "joinLink": "https://call.whatsapp.com/video/hMwVijMQtUb0qBJL3lf0rv",
+    "startTime": "1713724680"
+  }
+}
+
 const fkontak = {
 key: {
 participants: "0@s.whatsapp.net",
@@ -2424,58 +2483,44 @@ try {
 }
 break
 //========== Download Menu ==========\\
-case 'ytmp3' :
 case 'play': {
-if (!text || text.trim() === "") 
-return m.reply(`Masukan judul/link!\ncontoh:\n\n> ${prefix}play Pulang - Wali Band\n> ${prefix}ytmp3 https://youtube.com/watch?v=example`);
-m.reply(mess.wait);
+if (!text) return reply(`Contoh: ${prefix + command} dj tiktok`);
+reply("Proses!");
 try {
-const yts = require("yt-search");
-const axios = require("axios");
-let videoUrl, title, thumbnail;
-const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w\-_]+/;
-if (ytRegex.test(text)) {
-videoUrl = text.trim();
-title = `ᴘᴏᴡᴇʀᴇᴅ ʙʏ ${botname}`;
-thumbnail = 'https://g.top4top.io/p_3273ia0x21.jpg';
-} else {
-const search = await yts(text);
-if (!search || !search.videos.length) {
-return m.reply('Audio tidak ditemukan. Silakan coba kata kunci lain.');
+async function getBuffer(url) {
+const res = await axios({
+method: 'get',
+url,
+responseType: 'arraybuffer'
+});
+return res.data;
 }
-const video = search.videos[0];
-videoUrl = video.url;
-title = video.title;
-thumbnail = video.image;
+const look = await yts(text);
+const convert = look.videos[0];
+if (!convert) return m.reply('Audio Tidak Ditemukan');
+if (convert.seconds >= 3600) {
+return m.reply('Audio is longer than 1 hour!');
 }
-const encodedUrl = encodeURIComponent(videoUrl);
-const res = await axios.get(`https://api.siputzx.my.id/api/d/ytmp3?url=${encodedUrl}`);
-const result = res.data;
-if (!result.status || !result.data || !result.data.dl) {
-return m.reply('Gagal mendapatkan audio dari link tersebut. Pastikan URL benar.');
-}
-const audioUrl = result.data.dl;
-await Ozora.sendMessage(m.chat, {
-audio: { url: audioUrl },
-mimetype: 'audio/mpeg',
-contextInfo: {
-externalAdReply: {
-title: title,
-body: "",
-thumbnailUrl: thumbnail,
-sourceUrl: videoUrl,
-mediaType: 1,
-showAdAttribution: true,
-renderLargerThumbnail: true
-}
-}
-}, { quoted: m });
-
+let audioUrl;
+try {
+audioUrl = await youtube(convert.url);
 } catch (e) {
-console.error("Error pada fitur play:", e);
-return m.reply(`Terjadi kesalahan:\n${e.message}`);
+reply("Retrying...");
+audioUrl = await youtube(convert.url);
 }
+const thumbBuffer = await getBuffer(convert.thumbnail);
+await Ozora.sendMessage(m.chat, {
+audio: {
+url: audioUrl.mp3
+},
+mimetype: 'audio/mpeg',
+}, {
+quoted: FakeEVS
+});
+} catch (e) {
+m.reply(`*Error:* ${e.message}`);
 }
+};
 break
 default:
 //<================================================>

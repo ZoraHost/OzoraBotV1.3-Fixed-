@@ -523,13 +523,8 @@ ${readmore}
 ╰═┅═━––––––๑
 `
  Ozora.sendMessage(m.chat, {
- video: {
- url: 'https://files.catbox.moe/keg4qr.mp4'
- },
- caption: menulist,
- gifPlayback: true,
- gifAttribution: 1,
- contextInfo: { 
+ text: menulist,
+ contextInfo: {
  mentionedJid: [m.sender],
  isForwarded: true,
  forwardedNewsletterMessageInfo: {
